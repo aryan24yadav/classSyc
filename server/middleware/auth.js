@@ -1,32 +1,24 @@
+import { verifyToken } from '../utils/jwt.js';
+import { getBearerToken } from '../utils/http.js';
 
+export const protect = (req, res, next) => {
+    const token = getBearerToken(req.headers.authorization);
 
-export const protect = async(req , res , next) => {
-    try {
-        let token;
-        if(req.headers.authorization && req.headers.authorization.startWith('Bearer')) {
-            token = req.headers.authorization.split('')[1]; // extract token part
-        }
-
-        if(!token) {
-            return res.status(401).json({
-                success:false,
-                error:'Not authorized, no token provided'
-            })
-        }
-
-        try {
-            const decode = verifyToken(token);
-            console.log('this is token decode result',decode);
-            req.user = decode;
-            next();
-        } catch (error) {
-            console.log('invalid or expired token')
-            res.status(401).json({
-                success:false,
-                error:'invalid or expired token'
-            })
-        }
-    } catch (error) {
-        next(error);
+    if (!token) {
+        return res.status(401).json({
+            success: false,
+            error: 'Not authorized, no token provided',
+        });
     }
-}
+
+    try {
+        const decoded = verifyToken(token);
+        req.user = { userId: decoded.userId };
+        return next();
+    } catch (error) {
+        return res.status(401).json({
+            success: false,
+            error: error.name === 'TokenExpiredError' ? 'Token expired' : 'Invalid token',
+        });
+    }
+};

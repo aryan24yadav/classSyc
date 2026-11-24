@@ -1,143 +1,103 @@
-import { useCallback, useRef, useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { joinRoom, leaveRoom } from '../service/zego';
 
+const waitFor = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Video room state for a page.
+ * status: 'idle'       nothing started yet
+ *         'connecting' waiting for the container / creating the room
+ *         'ready'      ZEGOCLOUD UI is on screen (pre-join view or room)
+ *         'joined'     inside the room
+ *         'left'       the user left from the video UI
+ *         'error'      joining failed
+ */
 export const useZego = () => {
-
-    const [isJoined, setIsJoined] = useState(false);
-    const [userHasJoined, setUserHasJoined] = useState(false);
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
-
     const containerRef = useRef(null);
-    const joinedRoomIdRef = useRef(null);
-    const isJoiningRef = useRef(false);
-    const isLeavingRef = useRef(false);
-    const { user } = useAuth();
+    const mountedRef = useRef(true);
+    const joiningRef = useRef(false);
+    // true while *we* close the room, so the SDK's onLeaveRoom is not treated as the user leaving
+    const leavingByAppRef = useRef(false);
 
-    const joinZegoRoom = useCallback(async(roomId) => {
-        if(joinedRoomIdRef.current === roomId && isJoined){
-            return {success:true}
+    const [status, setStatus] = useState('idle');
+    const [error, setError] = useState(null);
+
+    // Only touch state while the page is still on screen
+    const update = useCallback((nextStatus, nextError = null) => {
+        if (!mountedRef.current) return;
+        setStatus(nextStatus);
+        setError(nextError);
+    }, []);
+
+    const join = useCallback(async ({ appId, token, roomId, userId, userName, onUserLeft }) => {
+        if (joiningRef.current) {
+            return { success: false, error: 'Already joining' };
         }
-
-        if(isJoiningRef.current){
-            return {success:false , error:'Join room in process'}
-        }
-
-        if(!roomId){
-            const errorMessage = 'RoomId is required'
-            setError(errorMessage);
-            return {success: false, error:errorMessage};
-        }
-
-        isJoiningRef.current = true;
-        setLoading(true);
-        setError(null);
+        joiningRef.current = true;
+        update('connecting');
 
         try {
-            // wait for container to be available with retry mechanism 
-            let retries = 0;
-            const maxRetries = 30;
-            while(!containerRef.current && retries < maxRetries){
-                await new Promise(resolve => setTimeout(resolve,100));
-                retries++;
+            // The container div may not be in the DOM on the very first render
+            for (let i = 0; i < 30 && !containerRef.current; i++) {
+                await waitFor(100);
+            }
+            if (!containerRef.current) {
+                throw new Error('Video container is not available');
             }
 
-            if(!containerRef.current){
-                throw new Error('container element is not available');
-            }
+            // Close any previous room without treating it as the user leaving
+            leavingByAppRef.current = true;
+            leaveRoom();
+            leavingByAppRef.current = false;
 
-            const container = containerRef.current;
-            if(container.offsetWidth === 0 || container.offsetWidth === 0){
-                console.warn('Container has Zero deminsions, waiting a bot more...');
-                await new Promise(resolve => setTimeout(resolve,500));
-            }
-
-            await joinRoom(
+            await joinRoom({
+                appId,
+                token,
                 roomId,
-                user.id,
-                user.name,
-                container,
-                () => {
-                    // onJoinCall
-                    setUserHasJoined(true)
+                userId,
+                userName,
+                container: containerRef.current,
+                onJoin: () => update('joined'),
+                onLeave: () => {
+                    if (leavingByAppRef.current) return;
+                    update('left');
+                    onUserLeft?.();
                 },
-                () => {
-                    // onLeaveCall
-                    setUserHasJoined(false);
-                }
-            )
-            
-            setIsJoined(true);
-            joinedRoomIdRef.current = roomId;
-            
-        } catch (error) {
-            console.error('failed to join room',error);
-            const errorMessage = error.message || 'Failed to join room.Please check you camera ,microphone permission and try again'
-            setError(errorMessage);
-            setIsJoined(false);
-            setUserHasJoined(false);
-            joinedRoomIdRef.current = null;
-            return {success: false , error:errorMessage};
-        
-        }finally{
-            setLoading(false);
-            isJoiningRef.current = false;
+            });
+
+            // Show the SDK's own UI (it may ask the user to press "Join" first)
+            if (mountedRef.current) {
+                setStatus((current) => (current === 'joined' ? current : 'ready'));
+            }
+            return { success: true };
+        } catch (err) {
+            const message = err?.message
+                || 'Failed to join the video room. Check your camera and microphone permissions and try again.';
+            update('error', message);
+            return { success: false, error: message };
+        } finally {
+            joiningRef.current = false;
         }
+    }, [update]);
 
-    },[user])
+    // Show an error in the video area (e.g. the server refused a video token)
+    const fail = useCallback((message) => update('error', message), [update]);
 
-
-    const leaveZegoRoom = useCallback(async () => {
-    if (isLeavingRef.current || !joinedRoomIdRef.current) {
-        return;
-    }
-
-    isLeavingRef.current = true;
-    try {
-        leaveRoom(() => {
-            setUserHasJoined(false);
-        })
-        setIsJoined(false);
-        setUserHasJoined(false);
-        joinedRoomIdRef.current = null;
-    } catch (error) {
-        console.error('failed to leave room',error);
-        setIsJoined(false);
-        setUserHasJoined(false);
-        joinedRoomIdRef.current = null;
-    }finally{
-        isLeavingRef.current = false;
-    }
-    },[]);
-
-
-    useEffect(() => {
-  return () => {
-    if (joinedRoomIdRef.current && !isLeavingRef.current) {
-      try {
+    const leave = useCallback(() => {
+        leavingByAppRef.current = true;
         leaveRoom();
-      } catch (error) {
-        console.error('Error in cleaup leave room', error);
-      }
-      joinedRoomIdRef.current = null;
-      isJoiningRef.current = false;
-      isLeavingRef.current = false;
-    }
-  }
-}, []);
+        update('idle');
+    }, [update]);
 
-    return {
-    //state
-    isJoined,
-    userHasJoined,
-    error,
-    loading,
-    containerRef,
+    // Close the room when the page unmounts
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => {
+            mountedRef.current = false;
+            leavingByAppRef.current = true;
+            leaveRoom();
+        };
+    }, []);
 
-    //Methods
-    joinZegoRoom,
-    leaveZegoRoom
-    }
-
-
-}
+    return { containerRef, status, error, join, leave, fail };
+};

@@ -1,152 +1,108 @@
-import { createContext, useCallback, useContext,useState } from "react";
-import { API_ENDPOINTS } from "../utils/constants";
-import api from "../utils/api";
+import { createContext, useCallback, useContext, useMemo } from 'react';
+import { API_ENDPOINTS } from '../utils/constants';
+import api from '../utils/api';
+import { getErrorMessage } from '../utils/helpers';
 
+const SessionContext = createContext(null);
 
- 
-const SessionContext = createContext();
-
-
-export const SessionProvider = ({children}) => {
-    const [currentSession,setCurrentSession] = useState(null);
-    const [loading,setLoading] = useState(false);
-    const [error,setError] = useState(null);
-
-    //Create a new session
-    const createSession = useCallback(async () => {
-        try {
-            setError(null);
-            setLoading(true);
-            const response = await api.post(API_ENDPOINTS.SESSION.CREATE);
-            const session = response.data.data.session;
-
-            setCurrentSession(session);
-            return {success:true, session};
-        } catch (error) {
-            const errorMessage = error.response?.data?.error || 'Failed to create new Session';
-            setError(errorMessage);
-            return {success:false, error:errorMessage};
-        }finally{
-            setLoading(false);
-        }
-    },[])
-
-    // joinSession
-    const joinSession = useCallback(async (roomId) => {
-        try {
-            setError(null);
-            setLoading(true);
-            const response = await api.post(API_ENDPOINTS.SESSION.JOIN, {roomId} );
-            const session = response.data.data.session;
-
-            setCurrentSession(session);
-            return {success:true, session};
-        } catch (error) {
-            const errorMessage = error.response?.dsta?.error || 'Failed to join Session';
-            setError(errorMessage);
-            return {success:false, error:errorMessage};
-        }finally{
-            setLoading(false);
-        }
-    },[])
-
-
-    // get Session
-    const getSession = useCallback(async (roomId) => {
-        try {
-            setError(null);
-            setLoading(true);
-            const response = await api.get(`${API_ENDPOINTS.SESSION.GET}/${roomId}`);
-
-            const session = response.data.data.session;
-
-            setCurrentSession(session);
-            return {success:true, session};
-        } catch (error) {
-            const errorMessage = error.response?.dsta?.error || 'Failed to get Session';
-            setError(errorMessage);
-            return {success:false, error:errorMessage};
-        }finally{
-            setLoading(false);
-        }
-    },[])
-
-
-        // leave Session
-    const leaveSession = useCallback(async (roomId) => {
-        try {
-            setError(null);
-            setLoading(true);
-            await api.post(API_ENDPOINTS.SESSION.LEAVE, {roomId});
-
-            setCurrentSession(null);
-            return {success:true};
-        } catch (error) {
-            const errorMessage = error.response?.dsta?.error || 'Failed to leave Session';
-            setError(errorMessage);
-            return {success:false, error:errorMessage};
-        }finally{
-            setLoading(false);
-        }
-    },[])
-
-       // list Session
-    const listSessions = useCallback(async (status = 'active') => {
-        try {
-            setError(null);
-            setLoading(true);
-            const response = await api.get('/session/list',{
-                params: {status}
-            });
-            const sessions = response.data.data.session;
-            return {success:true, sessions};
-        } catch (error) {
-            const errorMessage = error.response?.dsta?.error || 'Failed to get List of Session';
-            setError(errorMessage);
-            return {success:false, error:errorMessage};
-        }finally{
-            setLoading(false);
-        }
-    },[])
-
-
-    const clearSession = useCallback(() => {
-    setCurrentSession(null);
-    setError(null);
-}, []);
-
-const value = {
-    currentSession,
-    loading,
-    error,
-    createSession,
-    joinSession,
-    getSession,
-    leaveSession,
-    listSessions,
-    clearSession,
-    setError
+// Runs an API call and returns { success, ...data } or { success: false, error }
+const request = async (call, pick, fallbackMessage) => {
+    try {
+        const response = await call();
+        return { success: true, ...pick(response.data.data) };
+    } catch (error) {
+        return { success: false, error: getErrorMessage(error, fallbackMessage) };
+    }
 };
 
-return( 
-<SessionContext.Provider value={value}>
-    {children}
-    </SessionContext.Provider>
-)
+export const SessionProvider = ({ children }) => {
+    const createSession = useCallback(
+        () => request(
+            () => api.post(API_ENDPOINTS.SESSION.CREATE),
+            (data) => ({ session: data.session }),
+            'Failed to create a new session'
+        ),
+        []
+    );
 
+    const joinSession = useCallback(
+        (roomId) => request(
+            () => api.post(API_ENDPOINTS.SESSION.JOIN, { roomId }),
+            (data) => ({ session: data.session }),
+            'Failed to join the session'
+        ),
+        []
+    );
 
+    const getSession = useCallback(
+        (roomId) => request(
+            () => api.get(`${API_ENDPOINTS.SESSION.GET}/${encodeURIComponent(roomId)}`),
+            (data) => ({ session: data.session }),
+            'Failed to load the session'
+        ),
+        []
+    );
+
+    const leaveSession = useCallback(
+        (roomId) => request(
+            () => api.post(API_ENDPOINTS.SESSION.LEAVE, { roomId }),
+            () => ({}),
+            'Failed to leave the session'
+        ),
+        []
+    );
+
+    const endSession = useCallback(
+        (roomId) => request(
+            () => api.post(API_ENDPOINTS.SESSION.END, { roomId }),
+            (data) => ({ session: data.session }),
+            'Failed to end the session'
+        ),
+        []
+    );
+
+    const listSessions = useCallback(
+        (status = 'all') => request(
+            () => api.get(API_ENDPOINTS.SESSION.LIST, { params: { status } }),
+            (data) => ({ sessions: data.sessions }),
+            'Failed to load your sessions'
+        ),
+        []
+    );
+
+    // Short-lived ZEGOCLOUD token, created by the server
+    const getVideoToken = useCallback(
+        (roomId) => request(
+            () => api.post(API_ENDPOINTS.SESSION.VIDEO_TOKEN, { roomId }),
+            (data) => ({ video: data }),
+            'Failed to get access to the video room'
+        ),
+        []
+    );
+
+    const value = useMemo(() => ({
+        createSession,
+        joinSession,
+        getSession,
+        leaveSession,
+        endSession,
+        listSessions,
+        getVideoToken,
+    }), [createSession, joinSession, getSession, leaveSession, endSession, listSessions, getVideoToken]);
+
+    return (
+        <SessionContext.Provider value={value}>
+            {children}
+        </SessionContext.Provider>
+    );
 };
-
 
 export const useSession = () => {
-    
     const context = useContext(SessionContext);
-    if(!context) {
-        throw new Error('useSession must be used within a session Provider')
+    if (!context) {
+        throw new Error('useSession must be used within a SessionProvider');
     }
-
     return context;
-}
+};
 
-
-export default SessionContext
+export default SessionContext;

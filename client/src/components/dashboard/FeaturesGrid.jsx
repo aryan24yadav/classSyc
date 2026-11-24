@@ -28,7 +28,7 @@ const FeaturesGrid = () => {
 
                 <div key={index} className="bg-white rounded-xl p-6 shadow-md border border-gray-100">
                     <div className={`w-12 h-12  ${colorMap[feature.color]} rounded-lg flex items-center justify-center mb-4`}>
-                  {IconComponent && <IconComponent className='w-6 h-6 text-white'/>}
+                  {IconComponent && <IconComponent className='w-6 h-6'/>}
                 </div>
 
                 <h4 className="font-semibold text-gray-900 mb-2">

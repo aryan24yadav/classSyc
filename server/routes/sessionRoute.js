@@ -1,58 +1,59 @@
 import express from 'express';
-import {body,validationResult} from 'express-validator';
-import {createSession,getSession,joinSession,leaveSession,listSession,endSession} from '../controllers/sessionControllers.js';
+import { body, param, query } from 'express-validator';
+import {
+    createSession,
+    getSession,
+    joinSession,
+    leaveSession,
+    listSession,
+    endSession,
+    getVideoToken,
+} from '../controllers/sessionControllers.js';
 import { protect } from '../middleware/auth.js';
+import { handleValidationErrors } from '../middleware/validate.js';
+import { ROOM_ID_PATTERN } from '../utils/roomId.js';
 
 const router = express.Router();
 
-//validation middleware
-const handleValidationError = (req,res,next) => {
-    const errors = validationResult(req);
-    if(!errors.isEmpty()){
-        return res.status(400).json({
-            success:false,
-            error:errors.array()[0].msg
-        })
-    }
-    next();
-}
+const roomIdInBody = body('roomId')
+    .isString()
+    .withMessage('Room ID is required')
+    .trim()
+    .matches(ROOM_ID_PATTERN)
+    .withMessage('Room ID is invalid');
 
+const roomIdInParams = param('roomId')
+    .trim()
+    .matches(ROOM_ID_PATTERN)
+    .withMessage('Room ID is invalid');
+
+// Every session route needs a logged-in user
 router.use(protect);
 
-//GET /api/session/list
-router.get('/list',listSession)
+// GET /api/session/list?status=all|active|ended
+router.get(
+    '/list',
+    [query('status').optional().isIn(['all', 'active', 'ended']).withMessage('Invalid status filter')],
+    handleValidationErrors,
+    listSession
+);
 
-//POST /api/session/create
-router.post('/create',createSession)
+// POST /api/session/create
+router.post('/create', createSession);
 
-//POST /api/session/join
-router.post('/join',
-            [
-                body('roomId')
-                    .trim()
-                    .notEmpty()
-                    .withMessage('Room ID is required'),
-            ],
-            handleValidationError,
-            joinSession
-)
+// POST /api/session/join
+router.post('/join', [roomIdInBody], handleValidationErrors, joinSession);
 
-//POST /api/session/leave
-router.post('/leave',
-    [
-        body('roomId')
-            .trim()
-            .notEmpty()
-            .withMessage('Room ID is required'),
-    ],
-    handleValidationError,
-    leaveSession
-)
+// POST /api/session/leave
+router.post('/leave', [roomIdInBody], handleValidationErrors, leaveSession);
 
-//GET /api/session/:roomId
-router.get('/:roomId',getSession)
+// POST /api/session/end (host only)
+router.post('/end', [roomIdInBody], handleValidationErrors, endSession);
 
-//POST /api/session/end
-router.post('/end',endSession)
+// POST /api/session/zego-token (host or participant of an active session)
+router.post('/zego-token', [roomIdInBody], handleValidationErrors, getVideoToken);
+
+// GET /api/session/:roomId  (keep this last so it does not catch the routes above)
+router.get('/:roomId', [roomIdInParams], handleValidationErrors, getSession);
 
 export default router;

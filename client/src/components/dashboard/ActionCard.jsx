@@ -6,7 +6,7 @@ const ActionCard = ({onCreateSession,onJoinSession,creating}) => {
 
     return (
         <div className='grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto'>
-            <div className='bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all transform hover:translate-y-1 border border-gray-100'>
+            <div className='bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all transform hover:-translate-y-1 border border-gray-100'>
 
                 <div className='flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl mb-6 mx-auto'>
 
@@ -24,7 +24,7 @@ const ActionCard = ({onCreateSession,onJoinSession,creating}) => {
               <button
                 onClick={onCreateSession}
                 disabled={creating}
-                className='w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg focus-outline-none focus:ring-2 focus:ring-offset-2 focus-ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all transform hover:scale-[1.02] shadow-lg'
+                className='w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all transform hover:scale-[1.02] shadow-lg'
               >
                 {creating ? (
                     <span className='flex items-center justify-center'>
@@ -37,7 +37,7 @@ const ActionCard = ({onCreateSession,onJoinSession,creating}) => {
               </button>
                 </div>
 
-                    <div className='bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all transform hover:translate-y-1 border border-gray-100'>
+                    <div className='bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all transform hover:-translate-y-1 border border-gray-100'>
                         <div className='flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl mb-6 mx-auto'>
 
                     <FaUser className='w-8 h-8 text-white' />
@@ -54,7 +54,7 @@ const ActionCard = ({onCreateSession,onJoinSession,creating}) => {
 
               <button
                 onClick={onJoinSession}
-                className='w-full px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg focus-outline-none focus:ring-2 focus:ring-offset-2 focus-ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all transform hover:scale-[1.02] shadow-lg'
+                className='w-full px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all transform hover:scale-[1.02] shadow-lg'
               >
                 {APP_CONFIG.DASHBOARD_CONTENT.ACTION_CARDS.JOIN.BUTTON}
 
@@ -68,4 +68,4 @@ const ActionCard = ({onCreateSession,onJoinSession,creating}) => {
     )
 }
 
-export default ActionCard;
+export default ActionCard;

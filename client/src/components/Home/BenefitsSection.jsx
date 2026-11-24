@@ -1,5 +1,5 @@
 import React from 'react'
-import { APP_CONFIG } from "../../utils.js/constants"
+import { APP_CONFIG } from '../../utils/constants'
 import { FaCheckCircle, FaVideo } from 'react-icons/fa';
 
 const BenefitsSection = () => {
@@ -30,7 +30,7 @@ const BenefitsSection = () => {
             <ul className='space-y-4'>
               {benefits.map((benefit,index) => (
                 <li key={index} className='flex items-center'>
-                  <FaCheckCircle className='w-6 h-6 text-green-500 mr-3 mt-1 flex-shrink-0'/>
+                  <FaCheckCircle className='w-6 h-6 text-green-500 mr-3 flex-shrink-0'/>
                   <span className='text-lg text-gray-700'> {benefit} </span>
                 </li>
               ))}

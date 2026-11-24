@@ -1,8 +1,7 @@
 import React from 'react';
 import { APP_CONFIG } from '../../utils/constants';
-import { FaRedo, FaLock, FaSpinner, FaCircle, FaExternalLinkAlt } from 'react-icons/fa';
-
-// const { SESSIONS_LIST } = APP_CONFIG.DASHBOARD_CONTENT;
+import { FaSpinner, FaCircle, FaExternalLinkAlt } from 'react-icons/fa';
+import { formatDate } from '../../utils/helpers';
 
 const SessionList = ({ sessions, loading, statusFilter, onFilterChange, onRejoinSession }) => {
     const statusBadge = (status) => {
@@ -68,14 +67,14 @@ const SessionList = ({ sessions, loading, statusFilter, onFilterChange, onRejoin
                             </div>
 
                             <div className='mt-2 text-lg font-semibold text-gray-900'>
-                                Room : {s.round}
+                                Room: <span className='font-mono'>{s.roomId}</span>
 
                             </div>
                             <div className='text-sm text-gray-500 mt-1'>Host: {s.hostName}</div>
-                            <div className='text-sm text-gray-600'>Participants: {s.participantCount}</div>
+                            <div className='text-sm text-gray-600'>Participants: {s.participantsCount}</div>
                             <div className='text-sm text-gray-500 mt-1'>
                                 Started: {s.startedAt ? formatDate(s.startedAt) : 'N/A'}
-                                {s.endedAt && <>. Ended: {formatDate(s.endedAt)}</>}
+                                {s.endedAt && <> · Ended: {formatDate(s.endedAt)}</>}
                             </div>
 
                         </div>
@@ -84,15 +83,15 @@ const SessionList = ({ sessions, loading, statusFilter, onFilterChange, onRejoin
                                <button
                                                onClick={() => onRejoinSession(s)}
                                                disabled={s.status !== 'active'}
-                                               className='inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg focus-outline-none focus:ring-2 focus:ring-offset-2 focus-ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed'
+                                               className='inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed'
                                              >
                                                {s.status === 'active' ? (
                                                 <>
                                                 {APP_CONFIG.DASHBOARD_CONTENT.SESSIONS_LIST.REJOIN_BUTTON}
-                                                < FaExternalLinkAlt className='w-4 h-4 ml-2'/>
+                                                <FaExternalLinkAlt className='w-4 h-4 ml-2'/>
                                                 </>
                                                   
-                                               ) : (APP_CONFIG.DASHBOARD_CONTENT.ACTION_CARDS.ENDED.BUTTON)}
+                                               ) : (APP_CONFIG.DASHBOARD_CONTENT.SESSIONS_LIST.ENDED_BUTTON)}
                                
                                              </button>
 

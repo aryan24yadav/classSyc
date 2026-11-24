@@ -1,6 +1,6 @@
 import React from 'react'
- import {FaEnvelope, FaGithub, FaLinkedin, FaTwitch, FaTwitter, FaVideo} from 'react-icons/fa'
-import { APP_CONFIG } from '../utils.js/constants'
+import { FaGithub, FaLinkedin, FaVideo } from 'react-icons/fa'
+import { APP_CONFIG } from '../utils/constants'
 import { Link } from 'react-router-dom'
 const Footer = () => {
   return (
@@ -21,46 +21,25 @@ const Footer = () => {
               <p className='text-gray-400 mb-4 max-w-md'>{APP_CONFIG.APP_DESCRIPTION}</p>
 
               <div className='flex space-x-4'>
-                <a 
+                <a
                 href={APP_CONFIG.SOCIAL_LINKS.GITHUB}
                 target='_blank'
                 rel='noopener noreferrer'
                 className='w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors'
-                aria-label='Github'
+                aria-label='GitHub'
                 >
                   <FaGithub className='w-5 h-5 text-gray-400 hover:text-white '/>
                 </a>
 
-                 <a 
-                href={APP_CONFIG.SOCIAL_LINKS.TWITTER}
-                target='_blank'
-                rel='noopener noreferrer'
-                className='w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors'
-                aria-label='Twitter'
-                >
-                  <FaTwitter className='w-5 h-5 text-gray-400 hover:text-white '/>
-                </a>
-
-                 <a 
+                <a
                 href={APP_CONFIG.SOCIAL_LINKS.LINKEDIN}
                 target='_blank'
                 rel='noopener noreferrer'
                 className='w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors'
-                aria-label='Linkedin'
+                aria-label='LinkedIn'
                 >
                   <FaLinkedin className='w-5 h-5 text-gray-400 hover:text-white '/>
                 </a>
-
-                 <a 
-                href={APP_CONFIG.SOCIAL_LINKS.EMAIL}
-                target='_blank'
-                rel='noopener noreferrer'
-                className='w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors'
-                aria-label='Email'
-                >
-                  <FaEnvelope className='w-5 h-5 text-gray-400 hover:text-white '/>
-                </a>
-
               </div>
             </div>
 
@@ -109,7 +88,7 @@ const Footer = () => {
           </div>
 
           <div className='border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400'>
-            <p>&copy; {new Date().getFullYear()} {APP_CONFIG.APP_NAME},{APP_CONFIG.COPYRIGHT_TEXT} </p>
+            <p>&copy; {new Date().getFullYear()} {APP_CONFIG.APP_NAME}. {APP_CONFIG.COPYRIGHT_TEXT} </p>
           </div>
             
         </div>

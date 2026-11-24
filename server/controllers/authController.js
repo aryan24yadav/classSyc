@@ -32,7 +32,7 @@ export const register = async (req,res,next) => {
                 },
                 token
             },
-            message:'User register successfully'
+            message:'User registered successfully'
         })
         
     } catch (error) {
@@ -47,17 +47,16 @@ export const login = async (req,res,next) => {
         const {email,password} = req.body;
 
         const user = await User.findOne({email}).select('+password');
+        // Same status and message for unknown email and wrong password,
+        // so the response does not reveal which emails are registered
         if(!user){
-            return res.status(400).json({
+            return res.status(401).json({
                 success:false,
                 error:'Invalid email or password'
             })            
         }
 
-        // check if passwor match
         const isPasswordMatch = await user.matchPassword(password);
-        
-                                                                                        
         if(!isPasswordMatch){
             return res.status(401).json({
                 success:false,
@@ -77,7 +76,7 @@ export const login = async (req,res,next) => {
                 },
                 token
             },
-            message:'User login successfully'
+            message:'User logged in successfully'
         })
         
     } catch (error) {
@@ -106,7 +105,7 @@ export const getMe = async(req,res,next) => {
                     email:user.email
                 },
             },
-            message:'User get successfully'
+            message:'User fetched successfully'
         })
     } catch (error) {
         next(error);

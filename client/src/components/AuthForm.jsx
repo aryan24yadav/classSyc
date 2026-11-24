@@ -3,14 +3,14 @@ import { APP_CONFIG, ROUTES } from '../utils/constants';
 import { FaVideo, FaLock, FaEnvelope, FaUserPlus, FaExclamationCircle, FaUser, FaShieldAlt, FaSpinner } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
-const AuthForm = ({mode,formData,onChange,onSubmit,loading,error,localError}) => {
+const AuthForm = ({mode,formData,onChange,onSubmit,loading,error,fromState}) => {
 
       const isLogin = mode === 'login';
     
 
  
   return (
-    <div className={`min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ${isLogin ? 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 ' : 'bg-gradient-to-br from-purle-50 via-pink-50 to-red-50 '}`}>
+    <div className={`min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ${isLogin ? 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 ' : 'bg-gradient-to-br from-purple-50 via-pink-50 to-red-50 '}`}>
         <div className='max-w-md w-full'>
             <div className='text-center mb-8'>
                 <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl shadow-lg mb-4 ${isLogin ? 'bg-gradient-to-br from-blue-600 to-indigo-600' : 'bg-gradient-to-br from-purple-600 to-pink-600 '}`}>
@@ -41,10 +41,10 @@ const AuthForm = ({mode,formData,onChange,onSubmit,loading,error,localError}) =>
 
                     </p>
                     <form className={isLogin ? "space-y-5" : "space-y-4"} onSubmit={onSubmit}>
-                        {(error || localError) && (
-                            <div className='bg-red-50 border-1 border-red-500 text-red-700 p-4 rounded-lg flex items-start'>
+                        {error && (
+                            <div className='bg-red-50 border border-red-500 text-red-700 p-4 rounded-lg flex items-start'>
                                 <FaExclamationCircle className='w-5 h-5 mr-2 mt-0.5 flex-shrink-0'/>
-                                <span className='text-sm'>{error || localError}</span>
+                                <span className='text-sm'>{error}</span>
                             </div>
                         )}
 
@@ -73,7 +73,7 @@ const AuthForm = ({mode,formData,onChange,onSubmit,loading,error,localError}) =>
                         )}
 
                         <div>
-                                <label htmlFor="name" className='block text-sm font-medium text-gray-700 mb-2'>
+                                <label htmlFor="email" className='block text-sm font-medium text-gray-700 mb-2'>
                                     Email Address
                                 </label>
                                 <div className='relative'>
@@ -96,7 +96,7 @@ const AuthForm = ({mode,formData,onChange,onSubmit,loading,error,localError}) =>
                             </div>
 
                          <div>
-                                <label htmlFor="name" className='block text-sm font-medium text-gray-700 mb-2'>
+                                <label htmlFor="password" className='block text-sm font-medium text-gray-700 mb-2'>
                                     Password
                                 </label>
                                 <div className='relative'>
@@ -121,7 +121,7 @@ const AuthForm = ({mode,formData,onChange,onSubmit,loading,error,localError}) =>
 
                           {!isLogin && (
                             <div>
-                                <label htmlFor="name" className='block text-sm font-medium text-gray-700 mb-2'>
+                                <label htmlFor="confirmPassword" className='block text-sm font-medium text-gray-700 mb-2'>
                                     Confirm Password
                                 </label>
                                 <div className='relative'>
@@ -132,7 +132,7 @@ const AuthForm = ({mode,formData,onChange,onSubmit,loading,error,localError}) =>
                                     <input 
                                     id='confirmPassword'
                                     name='confirmPassword'
-                                    type='confirmPassword'
+                                    type='password'
                                     autoComplete='new-password'
                                     required
                                     value={formData.confirmPassword || ''}
@@ -148,13 +148,13 @@ const AuthForm = ({mode,formData,onChange,onSubmit,loading,error,localError}) =>
                           <button 
                           type='submit'
                           disabled={loading}
-                          className={`w-full flex jusify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2  focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] ${isLogin ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:ring-blue-500': 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 focus:ring-purple-500 mt-6'}`}
+                          className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2  focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] ${isLogin ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:ring-blue-500': 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 focus:ring-purple-500 mt-6'}`}
                           >
                             {
                                 loading ? (
                                     <>
                                       <FaSpinner className='animate-spin -ml-1 mr-3 h-5 w-5 text-white'/>
-                                      {isLogin ? 'Signing In' : 'Creating Account...'}
+                                      {isLogin ? 'Signing In...' : 'Creating Account...'}
                                     </>
                                 ) : (
                                     isLogin ? 'Sign In' : 'Create Account'
@@ -167,14 +167,14 @@ const AuthForm = ({mode,formData,onChange,onSubmit,loading,error,localError}) =>
                                     {isLogin ? (
                                         <>
                                         Don't have an account? {" "}
-                                        <Link to={ROUTES.REGISTER} className='font-medium text-blue-600 hover:text-blue-500 transition-colors'>
+                                        <Link to={ROUTES.REGISTER} state={fromState} className='font-medium text-blue-600 hover:text-blue-500 transition-colors'>
                                          Create one now 
                                         </Link>
                                         </>
                                     ) : (
                                         <>
                                         Already have an account? {" "}
-                                        <Link to={ROUTES.LOGIN} className='font-medium text-purple-600 hover:text-purple-500 transition-colors'>
+                                        <Link to={ROUTES.LOGIN} state={fromState} className='font-medium text-purple-600 hover:text-purple-500 transition-colors'>
                                          Sign in here 
                                         </Link>
                                         </>
